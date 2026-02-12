@@ -10,9 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class StudentController {
@@ -22,6 +20,7 @@ public class StudentController {
     @Autowired
     StudentRepository studentRepository;
 
+    // CREATE STUDENT
     @RequestMapping(method = RequestMethod.POST, path = "/student/post")
     private ResponseEntity<String> postStudent(@RequestBody Student student, HttpServletRequest request) {
         studentRepository.save(student);
@@ -29,6 +28,7 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.OK).body("Student successfully posted.");
     }
 
+    // GET STUDENT BY NAME
     @RequestMapping(method = RequestMethod.GET, path = "/student/get/{name}")
     private ResponseEntity<Student> getStudent(@PathVariable("name") String name) {
         logger.info("Getting student by name : {}", name);
@@ -37,10 +37,44 @@ public class StudentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // GET ALL STUDENTS
     @RequestMapping(method = RequestMethod.GET, path = "/student/all")
     private ResponseEntity<List<Student>> getAllStudents() {
         logger.info("Getting all students");
         List<Student> stuList = studentRepository.findAll();
         return ResponseEntity.status(HttpStatus.OK).body(stuList);
+    }
+
+    // DELETE STUDENT
+    @RequestMapping(method = RequestMethod.DELETE, path = "/student/delete/{name}")
+    private ResponseEntity<String> deleteStudent(@PathVariable("name") String name) {
+
+        logger.info("Deleting student : {}", name);
+
+        return studentRepository.findByName(name)
+                .map(student -> {
+                    studentRepository.delete(student);
+                    return ResponseEntity.ok("Student deleted successfully");
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Student not found"));
+    }
+
+    // UPDATE STUDENT
+    @RequestMapping(method = RequestMethod.PUT, path = "/student/update/{name}")
+    private ResponseEntity<String> updateStudent(@PathVariable("name") String name,
+                                                 @RequestBody Student updatedStudent) {
+
+        logger.info("Updating student : {}", name);
+
+        return studentRepository.findByName(name)
+                .map(student -> {
+                    student.setName(updatedStudent.getName());
+                    student.setAge(updatedStudent.getAge());
+                    studentRepository.save(student);
+                    return ResponseEntity.ok("Student updated successfully");
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Student not found"));
     }
 }
