@@ -9,12 +9,6 @@ pipeline {
 
     stages {
 
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/bhawnavishwakarma007/Java-springboot-project-docker-jenkins.git'
-            }
-        }
-
         stage('Build Backend Image') {
             steps {
                 dir('backend') {
@@ -68,4 +62,3 @@ pipeline {
         }
     }
 }
-
