@@ -5,76 +5,86 @@ import com.datastore.person.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
+@RequestMapping("/students")
 public class StudentController {
 
     private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     // CREATE STUDENT
-    @RequestMapping(method = RequestMethod.POST, path = "/student/post")
-    private ResponseEntity<String> postStudent(@RequestBody Student student, HttpServletRequest request) {
+    @PostMapping
+    public ResponseEntity<?> createStudent(@RequestBody Student student) {
+
+        if (student.getName() == null || student.getName().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Student name cannot be empty");
+        }
+
+        if (studentRepository.findByName(student.getName()).isPresent()) {
+            return ResponseEntity.badRequest().body("Student already exists");
+        }
+
         studentRepository.save(student);
-        logger.info("Posted student to DB : {}", student.getName());
-        return ResponseEntity.status(HttpStatus.OK).body("Student successfully posted.");
+        logger.info("Created student : {}", student.getName());
+
+        return ResponseEntity.ok(student);
     }
 
     // GET STUDENT BY NAME
-    @RequestMapping(method = RequestMethod.GET, path = "/student/get/{name}")
-    private ResponseEntity<Student> getStudent(@PathVariable("name") String name) {
-        logger.info("Getting student by name : {}", name);
+    @GetMapping("/{name}")
+    public ResponseEntity<?> getStudent(@PathVariable String name) {
+
+        logger.info("Fetching student : {}", name);
+
         return studentRepository.findByName(name)
-                .map(student -> ResponseEntity.ok().body(student))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // GET ALL STUDENTS
-    @RequestMapping(method = RequestMethod.GET, path = "/student/all")
-    private ResponseEntity<List<Student>> getAllStudents() {
-        logger.info("Getting all students");
-        List<Student> stuList = studentRepository.findAll();
-        return ResponseEntity.status(HttpStatus.OK).body(stuList);
-    }
+    @GetMapping
+    public ResponseEntity<List<Student>> getAllStudents() {
 
-    // DELETE STUDENT
-    @RequestMapping(method = RequestMethod.DELETE, path = "/student/delete/{name}")
-    private ResponseEntity<String> deleteStudent(@PathVariable("name") String name) {
+        logger.info("Fetching all students");
 
-        logger.info("Deleting student : {}", name);
-
-        return studentRepository.findByName(name)
-                .map(student -> {
-                    studentRepository.delete(student);
-                    return ResponseEntity.ok("Student deleted successfully");
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Student not found"));
+        return ResponseEntity.ok(studentRepository.findAll());
     }
 
     // UPDATE STUDENT
-    @RequestMapping(method = RequestMethod.PUT, path = "/student/update/{name}")
-    private ResponseEntity<String> updateStudent(@PathVariable("name") String name,
-                                                 @RequestBody Student updatedStudent) {
-
-        logger.info("Updating student : {}", name);
+    @PutMapping("/{name}")
+    public ResponseEntity<?> updateStudent(@PathVariable String name,
+                                           @RequestBody Student updatedStudent) {
 
         return studentRepository.findByName(name)
                 .map(student -> {
                     student.setName(updatedStudent.getName());
                     student.setAge(updatedStudent.getAge());
                     studentRepository.save(student);
-                    return ResponseEntity.ok("Student updated successfully");
+
+                    logger.info("Updated student {} -> {}", name, updatedStudent.getName());
+
+                    return ResponseEntity.ok(student);
                 })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Student not found"));
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // DELETE STUDENT
+    @DeleteMapping("/{name}")
+    public ResponseEntity<?> deleteStudent(@PathVariable String name) {
+
+        return studentRepository.findByName(name)
+                .map(student -> {
+                    studentRepository.delete(student);
+                    logger.info("Deleted student : {}", name);
+                    return ResponseEntity.ok("Student deleted successfully");
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
