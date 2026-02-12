@@ -11,7 +11,7 @@ pipeline {
 
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/CloudTechDevOps/Java-springboot-project.git'
+                git 'https://github.com/bhawnavishwakarma007/Java-springboot-project-docker-jenkins.git'
             }
         }
 
