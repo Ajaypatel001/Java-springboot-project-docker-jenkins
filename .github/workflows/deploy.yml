@@ -21,16 +21,22 @@ jobs:
         
           cd ${{ secrets.APP_PATH }}
         
+          echo "📂 Current files:"
+          ls -la
+        
           echo "📥 Pull latest code"
-          git pull origin main
+          git fetch --all
+          git reset --hard origin/main
         
           echo "🐳 Build backend"
           cd backend
+          ls
           sudo docker build -t springboot-backend .
           cd ..
         
           echo "🐳 Build frontend"
           cd frontend
+          ls
           sudo docker build -t streamlit-frontend .
           cd ..
         
@@ -38,10 +44,8 @@ jobs:
           sudo docker network create app-network || true
         
           echo "🛑 Stop old containers"
-          sudo docker stop backend || true
-          sudo docker rm backend || true
-          sudo docker stop frontend || true
-          sudo docker rm frontend || true
+          sudo docker rm -f backend || true
+          sudo docker rm -f frontend || true
         
           echo "▶️ Start backend"
           sudo docker run -d \
@@ -57,6 +61,7 @@ jobs:
             -p 8501:8501 \
             streamlit-frontend
         
-          echo "✅ Deployment complete"
+          echo "📦 Running containers:"
+          sudo docker ps
         
-                  echo "✅ Deployment complete"
+          echo "✅ Deployment complete"
