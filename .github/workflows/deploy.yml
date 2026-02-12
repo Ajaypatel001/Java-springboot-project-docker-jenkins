@@ -17,45 +17,46 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-
           echo "🚀 Starting deployment"
-
+        
           cd ${{ secrets.APP_PATH }}
-
+        
           echo "📥 Pull latest code"
           git pull origin main
-
+        
           echo "🐳 Build backend"
           cd backend
-          docker build -t springboot-backend .
+          sudo docker build -t springboot-backend .
           cd ..
-
+        
           echo "🐳 Build frontend"
           cd frontend
-          docker build -t streamlit-frontend .
+          sudo docker build -t streamlit-frontend .
           cd ..
-
+        
           echo "🌐 Create network"
-          docker network create app-network || true
-
+          sudo docker network create app-network || true
+        
           echo "🛑 Stop old containers"
-          docker stop backend || true
-          docker rm backend || true
-          docker stop frontend || true
-          docker rm frontend || true
-
+          sudo docker stop backend || true
+          sudo docker rm backend || true
+          sudo docker stop frontend || true
+          sudo docker rm frontend || true
+        
           echo "▶️ Start backend"
-          docker run -d \
+          sudo docker run -d \
             --name backend \
             --network app-network \
             -p 8084:8084 \
             springboot-backend
-
+        
           echo "▶️ Start frontend"
-          docker run -d \
+          sudo docker run -d \
             --name frontend \
             --network app-network \
             -p 8501:8501 \
             streamlit-frontend
-
+        
           echo "✅ Deployment complete"
+        
+                  echo "✅ Deployment complete"
